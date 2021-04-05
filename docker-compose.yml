@@ -1,0 +1,65 @@
+version: '3.2'
+services:
+  web:
+    image: php:7.4.3-apache
+    ports:
+      - "8181:80"
+    volumes:
+      - "./app:/var/www/html"
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+  composer:
+    image: composer/composer
+    networks:
+      - elk
+    volumes:
+      - "./app:/composer"
+    working_dir: /composer
+    command: install
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.0
+    user: "1000:1000"
+    ports:
+      - "9200:9200"
+    networks:
+      - elk
+    volumes:
+      - ./es_data:/usr/share/elasticsearch/data
+    environment:
+      - http.host=0.0.0.0
+      - transport.host=localhost
+      - network.host=0.0.0.0
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.12.0
+    user: "1000:1000"
+    volumes:
+      - type: bind
+        source: ./logstash/config/logstash.yml
+        target: /usr/share/logstash/config/logstash.yml
+        read_only: true
+      - type: bind
+        source: ./logstash/pipeline
+        target: /usr/share/logstash/pipeline
+        read_only: true
+      - type: bind
+        source: ./fb_data
+        target: /usr/share/logstash/fb_data
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+    networks:
+      - elk
+    depends_on:
+      - elasticsearch
+networks:
+  elk:

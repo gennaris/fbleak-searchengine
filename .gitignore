@@ -1,0 +1,4 @@
+.DS_Store
+es_data/*
+app/vendor/*
+fb_data/*
