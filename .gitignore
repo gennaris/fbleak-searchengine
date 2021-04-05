@@ -1,4 +1,6 @@
 .DS_Store
 es_data/*
-app/vendor/*
 fb_data/*
+!es_data/.gitkeep
+!fb_data/.gitkeep
+app/vendor/*
